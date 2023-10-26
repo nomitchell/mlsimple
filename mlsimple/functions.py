@@ -3,7 +3,7 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import matplotlib.pyplot as plt
 
-def plotTable(df, plotTitle='Tabular Data Plot', limitFeatures=True, featureLimit=10, yCol='y'):
+def plotTable(df, yCol, plotTitle='Tabular Data Plot', limitFeatures=True, featureLimit=10):
     # Need to fix if skipping plots ie if y column is not first and if non numeric row, doesnt leave blank col
     if not isinstance(df, pd.DataFrame):
         print("Dataframe passed is not a valid dataframe. Must be a Pandas DataFrame.")
@@ -12,9 +12,6 @@ def plotTable(df, plotTitle='Tabular Data Plot', limitFeatures=True, featureLimi
     columns = list(df.columns)
     print(yCol)
     if yCol not in columns:
-        if yCol=='y':
-            print('Please specify what column is used for y, i.e. (df, yCol="Price", ...')
-            return 1
         print('y column could not be found in DataFrame, double check argument.')
         return 1
 
@@ -36,9 +33,48 @@ def plotTable(df, plotTitle='Tabular Data Plot', limitFeatures=True, featureLimi
     plt.tight_layout()
     plt.show()
     return 0
-    
-def linearRegression(df):
+
+def costPlot():
     pass
+    
+def linearRegression(df, yCol, learning_rate=0.01, epochs=100, doNormalize=True):
+    if doNormalize:
+        df = normalize(df)
+    print('Doing linear regression on data with following features:')
+    plotTable(df, yCol=yCol)   
+
+    # There may exist and issue here where there is a column of 1's
+    x = np.array(df.drop([yCol], axis=1), dtype=float)
+    x = np.hstack((np.ones((x.shape[0],1)), x))
+    y = np.array(df[yCol], dtype=float)
+    y = np.reshape(y, (y.shape[0], 1))
+    theta = np.zeros((x.shape[1], 1))
+    theta, J_all = gradient_descent(x, y, theta, learning_rate, epochs)
+    J = meanSquaredError(x, y, theta)
+    print(f"Paramters: {theta}")
+
+    n_epochs = []
+    jplot = []
+    count = 0
+    for i in J_all
+
+def normalize(df):
+    return (df-df.mean())/df.std()
+
+def meanSquaredError(x, y, theta):
+    return ((np.matmul(x, theta)-y).T @ (np.matmul(x, theta)-y))/(2*y.shape[0])
+
+def gradient_descent(x, y, theta, learning_rate, epochs):
+    m = x.shape[0]
+    J_all = []
+    for _ in range(epochs):
+        h_x = np.matmul(x, theta)
+        derivative_ = (1/m)*(x.T@(h_x - y))
+        theta = theta - (learning_rate) * derivative_
+        J_all.append(meanSquaredError(x, y, theta))
+    return theta, J_all
 
 x = pd.read_csv('housedata.csv')
-plotTable(x, yCol='Price')
+#plotTable(x, yCol='Price')
+
+linearRegression(x.drop(['Neighborhood'], axis=1), 'Price')

@@ -3,42 +3,32 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import matplotlib.pyplot as plt
 
+
 def plotTable(df, yCol, plotTitle='Tabular Data Plot', limitFeatures=True, featureLimit=10):
-    # Need to fix if skipping plots ie if y column is not first and if non numeric row, doesnt leave blank col
-    if not isinstance(df, pd.DataFrame):
-        print("Dataframe passed is not a valid dataframe. Must be a Pandas DataFrame.")
-        return 1
+    numx = df.drop(yCol, axis=1).select_dtypes(include=np.number)
+    plotCount = len(numx.columns)
+    columns = numx.columns
 
-    columns = list(df.columns)
-    print(yCol)
-    if yCol not in columns:
-        print('y column could not be found in DataFrame, double check argument.')
-        return 1
-
-    plotCount = len(columns) - 1
-    
     if limitFeatures and plotCount > featureLimit:
-        plotCount = featureLimit
         print(f'Number of columns ({plotCount+1}) exceeds limit, only graphing first {featureLimit}. You can disable this limit by expressing the limitFeatures=False argument, change the limit with featureLimit=N.')
-    fig, axs = plt.subplots(nrows=plotCount//2+plotCount%2, ncols=2, figsize=(15,12))
+        plotCount = featureLimit
+
+    fig, axs = plt.subplots(nrows=plotCount//2+plotCount % 2, ncols=2, figsize=(15, 12))
     fig.suptitle(plotTitle)
+
     for i, ax in zip(range(plotCount), axs.ravel()):
-        #if not is_numeric_dtype(df[columns[i + 1]]):
-            #print(f'Skipping column "{columns[i + 1]}" since it contains non-numeric data.')
-            #continue
-        ax.plot(df[columns[i + 1]], df[yCol], 'o')
-        ax.set_title(columns[i+1])
+        ax.plot(numx[columns[i]], df[yCol], 'o')
+        ax.set_title(columns[i])
         ax.set_ylabel('y')
         ax.set_xlabel('x')
+
     plt.tight_layout()
     plt.show()
+
     return 0
 
-def costPlot():
-    pass
-
 class linearRegression():
-    def __init__(self, learning_rate, iterations):
+    def __init__(self, learning_rate=0.01, iterations=1000):
         self.learning_rate = learning_rate
         self.iterations = iterations
 
@@ -48,28 +38,50 @@ class linearRegression():
         self.b = 0
         self.x = x
         self.y = y
+        self.cHistory = []
 
         for _ in range(self.iterations):
+            self.cHistory.append(self.MSE(self.x, self.y))
             self.update_weights()
+        
+        print('this is hsitroy', self.cHistory)
+        self.costPlot()
+        
         return self
-    
+
     def update_weights(self):
         y_pred = self.predict(self.x)
-        dw = - (2*(self.x.T).dot(self.y - y_pred)) / self.m
-        db = - 2*np.sum(self.y - y_pred) / self.m
+        dw = (1/self.m) * (self.x.T).dot(y_pred - self.y)
+        db = (1/self.m) * np.sum(y_pred - self.y)
 
         self.w = self.w - self.learning_rate * dw
         self.b = self.b - self.learning_rate * db
 
         return self
-    
+
     def predict(self, x):
-        return x.dot(self.w) + self.b
+        return x.astype(float).dot(self.w) + self.b
+
+    def MSE(self, x, y):
+        return (y - self.predict(x))**2 * (0.5*self.m)
+    
+    def costPlot(self):
+        print('here')
+        plt.plot(range(1, len(self.cHistory) + 1), self.cHistory)
+        plt.title("MSE Cost Plot")
+        plt.ylabel("MSE Cost")
+        plt.xlabel("Iteration")
+        plt.show()
 
 def normalize(df):
     return (df-df.mean())/df.std()
 
-x = pd.read_csv('housedata.csv')
-#plotTable(x, yCol='Price')
+df = pd.read_csv('housedata.csv')
+#plotTable(df, yCol='Price')
 
-linearRegression(x.drop(['Neighborhood'], axis=1), 'Price')
+model = linearRegression(iterations = 100, learning_rate=0.000001)
+
+x = df.drop(["Price", "Neighborhood"], axis=1).values
+y = df['Price'].values
+
+model.fit(x, y)

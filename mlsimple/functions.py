@@ -36,27 +36,6 @@ def plotTable(df, yCol, plotTitle='Tabular Data Plot', limitFeatures=True, featu
 
 def costPlot():
     pass
-    
-def linearRegression(df, yCol, learning_rate=0.01, epochs=100, doNormalize=True):
-    if doNormalize:
-        df = normalize(df)
-    print('Doing linear regression on data with following features:')
-    plotTable(df, yCol=yCol)   
-
-    # There may exist and issue here where there is a column of 1's
-    x = np.array(df.drop([yCol], axis=1), dtype=float)
-    x = np.hstack((np.ones((x.shape[0],1)), x))
-    y = np.array(df[yCol], dtype=float)
-    y = np.reshape(y, (y.shape[0], 1))
-    theta = np.zeros((x.shape[1], 1))
-    theta, J_all = gradient_descent(x, y, theta, learning_rate, epochs)
-    J = meanSquaredError(x, y, theta)
-    print(f"Paramters: {theta}")
-
-    n_epochs = []
-    jplot = []
-    count = 0
-    for i in J_all
 
 class linearRegression():
     def __init__(self, learning_rate, iterations):
@@ -66,22 +45,29 @@ class linearRegression():
     def fit(self, x, y):
         self.m, self.n = x.shape
         self.w = np.zeros(self.n)
+        self.b = 0
+        self.x = x
+        self.y = y
+
+        for _ in range(self.iterations):
+            self.update_weights()
+        return self
+    
+    def update_weights(self):
+        y_pred = self.predict(self.x)
+        dw = - (2*(self.x.T).dot(self.y - y_pred)) / self.m
+        db = - 2*np.sum(self.y - y_pred) / self.m
+
+        self.w = self.w - self.learning_rate * dw
+        self.b = self.b - self.learning_rate * db
+
+        return self
+    
+    def predict(self, x):
+        return x.dot(self.w) + self.b
 
 def normalize(df):
     return (df-df.mean())/df.std()
-
-def meanSquaredError(x, y, theta):
-    return ((np.matmul(x, theta)-y).T @ (np.matmul(x, theta)-y))/(2*y.shape[0])
-
-def gradient_descent(x, y, theta, learning_rate, epochs):
-    m = x.shape[0]
-    J_all = []
-    for _ in range(epochs):
-        h_x = np.matmul(x, theta)
-        derivative_ = (1/m)*(x.T@(h_x - y))
-        theta = theta - (learning_rate) * derivative_
-        J_all.append(meanSquaredError(x, y, theta))
-    return theta, J_all
 
 x = pd.read_csv('housedata.csv')
 #plotTable(x, yCol='Price')

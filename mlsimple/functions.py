@@ -58,6 +58,15 @@ def linearRegression(df, yCol, learning_rate=0.01, epochs=100, doNormalize=True)
     count = 0
     for i in J_all
 
+class linearRegression():
+    def __init__(self, learning_rate, iterations):
+        self.learning_rate = learning_rate
+        self.iterations = iterations
+
+    def fit(self, x, y):
+        self.m, self.n = x.shape
+        self.w = np.zeros(self.n)
+
 def normalize(df):
     return (df-df.mean())/df.std()
 

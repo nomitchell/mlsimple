@@ -3,6 +3,74 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import matplotlib.pyplot as plt
 
+class linearRegression():
+    '''
+    Given a pandas dataframe of numerical columns, will auto-normalize and perform gradient descent,
+    where predictions can then be made. Automatically presents graphs for simple data visualization.
+    '''
+    
+    def initialize_parameters(self, lenw):
+        w = np.random.randn(1, lenw)
+        b = 0
+        return w, b
+
+    def predY(self, x, w, b):
+        z = np.dot(w,x) + b
+        return z
+
+    def cost_function(self, z, y):
+        m = y.shape[1]
+        J = (1/(2*m))*np.sum(np.square(z-y))
+        return J
+    
+    def gradientDescent(self, x, y, z, w, b, learning_rate):
+        m = y.shape[1]
+        dz = (1/m)*(z-y) 
+        dw = np.dot(dz,x.T)
+        db = np.sum(dz)
+
+        w = w - learning_rate*dw
+        b = b - learning_rate*db
+
+        return w, b
+
+    def cost_function(self, z, y):
+        m = y.shape[1]
+        J = (1/(2*m))*np.sum(np.square(z-y))
+        return J
+    
+    def plotCost(self, costs_train):
+        plt.plot(costs_train)
+        plt.xlabel('iterations per ten')
+        plt.ylabel('cost')
+        plt.title('Cost plot')
+        plt.show()
+
+    def fit(self, x_train, y_train, x_val, y_val, learning_rate=0.01, epochs=1000):
+        lenw = x_train.shape[0]
+        w, b = self.initialize_parameters(lenw)
+
+        costs_train = []
+
+        for i in range(epochs):
+            z_train = self.predY(x_train, w, b)
+            cost_train = self.cost_function(z_train, y_train)
+            w, b = self.gradientDescent(x_train, y_train, z_train, w, b, learning_rate)
+
+            if i%10==0:
+                costs_train.append(cost_train)
+
+            z_val = self.predY(x_val, w, b)
+
+            cost_val = self.cost_function(z_val, y_val)
+
+            print('Epochs ' + str(i) + '/' + str(epochs) + ': ')
+            print('Training Cost ' + str(cost_train) + '|' + 'Validation cost' + str(cost_val))
+
+        self.plotCost(costs_train)
+
+def normalize(df):
+    return (df-df.mean())/df.std()
 
 def plotTable(df, yCol, plotTitle='Tabular Data Plot', limitFeatures=True, featureLimit=10):
     numx = df.drop(yCol, axis=1).select_dtypes(include=np.number)
@@ -27,61 +95,3 @@ def plotTable(df, yCol, plotTitle='Tabular Data Plot', limitFeatures=True, featu
 
     return 0
 
-class linearRegression():
-    def __init__(self, learning_rate=0.01, iterations=1000):
-        self.learning_rate = learning_rate
-        self.iterations = iterations
-
-    def fit(self, x, y):
-        self.m, self.n = x.shape
-        self.w = np.zeros(self.n)
-        self.b = 0
-        self.x = x
-        self.y = y
-        self.cHistory = []
-
-        for _ in range(self.iterations):
-            self.cHistory.append(self.MSE(self.x, self.y))
-            self.update_weights()
-        
-        print('this is hsitroy', self.cHistory)
-        self.costPlot()
-        
-        return self
-
-    def update_weights(self):
-        y_pred = self.predict(self.x)
-        dw = (1/self.m) * (self.x.T).dot(y_pred - self.y)
-        db = (1/self.m) * np.sum(y_pred - self.y)
-
-        self.w = self.w - self.learning_rate * dw
-        self.b = self.b - self.learning_rate * db
-
-        return self
-
-    def predict(self, x):
-        return x.astype(float).dot(self.w) + self.b
-
-    def MSE(self, x, y):
-        return (y - self.predict(x))**2 * (0.5*self.m)
-    
-    def costPlot(self):
-        print('here')
-        plt.plot(range(1, len(self.cHistory) + 1), self.cHistory)
-        plt.title("MSE Cost Plot")
-        plt.ylabel("MSE Cost")
-        plt.xlabel("Iteration")
-        plt.show()
-
-def normalize(df):
-    return (df-df.mean())/df.std()
-
-df = pd.read_csv('housedata.csv')
-#plotTable(df, yCol='Price')
-
-model = linearRegression(iterations = 100, learning_rate=0.000001)
-
-x = df.drop(["Price", "Neighborhood"], axis=1).values
-y = df['Price'].values
-
-model.fit(x, y)

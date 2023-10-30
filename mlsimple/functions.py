@@ -53,16 +53,16 @@ class linearRegression():
         costs_train = []
 
         for i in range(epochs):
-            z_train = self.predY(x_train, w, b)
-            cost_train = self.cost_function(z_train, y_train)
-            w, b = self.gradientDescent(x_train, y_train, z_train, w, b, learning_rate)
+            y_pred = self.predY(x_train, w, b)
+            cost_train = self.cost_function(y_pred, y_train)
+            w, b = self.gradientDescent(x_train, y_train, y_pred, w, b, learning_rate)
 
             if i%10==0:
                 costs_train.append(cost_train)
 
-            z_val = self.predY(x_val, w, b)
+            pred_val = self.predY(x_val, w, b)
 
-            cost_val = self.cost_function(z_val, y_val)
+            cost_val = self.cost_function(pred_val, y_val)
 
             print('Epochs ' + str(i) + '/' + str(epochs) + ': ')
             print('Training Cost ' + str(cost_train) + '|' + 'Validation cost' + str(cost_val))
